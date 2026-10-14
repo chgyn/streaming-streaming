@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
-import { X, Tv, Film, Loader2, AlertTriangle, ExternalLink } from 'lucide-vue-next'
+import { X, Tv, Film, Loader2, AlertTriangle, ExternalLink, Cast } from 'lucide-vue-next'
 
 const playerStore = usePlayerStore()
 
@@ -74,11 +74,31 @@ const unreleasedInfo = computed(() => {
           :src="playerStore.embedUrl"
           class="w-full h-full border-0"
           allowfullscreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; presentation; remote-playback"
         ></iframe>
 
         <div v-else-if="playerStore.errorMessage" class="text-rose-400 text-sm px-6 text-center">
           {{ playerStore.errorMessage }}
+        </div>
+      </div>
+
+      <!-- Barra Utilitária de Transmissão e Smart TV -->
+      <div class="px-5 py-3 bg-slate-950/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2 text-slate-400">
+          <Cast class="w-4 h-4 text-sky-400 flex-shrink-0" />
+          <span>Para transmitir ou usar o player em tela cheia na Smart TV:</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <a
+            v-if="playerStore.embedUrl"
+            :href="playerStore.embedUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold transition-colors"
+          >
+            <ExternalLink class="w-3.5 h-3.5" />
+            <span>Abrir Player Direto (HTTPS)</span>
+          </a>
         </div>
       </div>
 
