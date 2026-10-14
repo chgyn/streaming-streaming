@@ -29,6 +29,12 @@ const rating = computed(() => {
   return props.media.vote_average ? props.media.vote_average.toFixed(1) : 'N/A'
 })
 
+const isUnreleased = computed(() => {
+  const dateStr = props.media.release_date || props.media.first_air_date
+  if (!dateStr) return false
+  return new Date(dateStr) > new Date()
+})
+
 function handleClick() {
   playerStore.openPlayer(props.media)
 }
@@ -52,6 +58,10 @@ function handleClick() {
         <div class="w-12 h-12 rounded-full bg-sky-400 text-slate-950 flex items-center justify-center shadow-lg shadow-sky-400/40 transform scale-75 group-hover:scale-100 transition-transform duration-300">
           <Play class="w-6 h-6 fill-slate-950 ml-0.5" />
         </div>
+      </div>
+      <!-- Unreleased Badge -->
+      <div v-if="isUnreleased" class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-amber-500/80 backdrop-blur-md border border-amber-400/40 text-[10px] font-extrabold text-slate-950 uppercase tracking-wide">
+        Em Breve
       </div>
       <!-- Rating Badge -->
       <div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md border border-slate-700/50 flex items-center gap-1 text-xs font-bold text-amber-400">

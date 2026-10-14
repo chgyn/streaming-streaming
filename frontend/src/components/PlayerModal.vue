@@ -1,12 +1,22 @@
 <script setup>
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
-import { X, Tv, Film, Loader2 } from 'lucide-vue-next'
+import { X, Tv, Film, Loader2, AlertTriangle, ExternalLink } from 'lucide-vue-next'
 
 const playerStore = usePlayerStore()
 
 const isTv = computed(() => {
   return playerStore.currentMedia?.media_type === 'tv'
+})
+
+const unreleasedInfo = computed(() => {
+  const dateStr = playerStore.currentMedia?.release_date || playerStore.currentMedia?.first_air_date
+  if (!dateStr) return null
+  const releaseDate = new Date(dateStr)
+  if (releaseDate > new Date()) {
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(releaseDate)
+  }
+  return null
 })
 </script>
 
@@ -25,12 +35,32 @@ const isTv = computed(() => {
             {{ playerStore.currentTitle }}
           </h2>
         </div>
-        <button
-          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          @click="playerStore.closePlayer"
-        >
-          <X class="w-5 h-5" />
-        </button>
+        <div class="flex items-center gap-2">
+          <a
+            v-if="playerStore.embedUrl"
+            :href="playerStore.embedUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-colors"
+            title="Abrir player em nova aba"
+          >
+            <ExternalLink class="w-4 h-4" />
+          </a>
+          <button
+            class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            @click="playerStore.closePlayer"
+          >
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Aviso para títulos não lançados -->
+      <div v-if="unreleasedInfo" class="px-5 py-3 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-xs flex items-center gap-2.5">
+        <AlertTriangle class="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <span>
+          <strong>Lançamento Futuro:</strong> Estreia prevista para <strong>{{ unreleasedInfo }}</strong>. O servidor do player retornará <strong>"404 | Not Found"</strong> pois este título ainda não foi lançado nos cinemas ou no streaming.
+        </span>
       </div>
 
       <!-- Iframe Container -->
@@ -44,7 +74,7 @@ const isTv = computed(() => {
           :src="playerStore.embedUrl"
           class="w-full h-full border-0"
           allowfullscreen
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         ></iframe>
 
         <div v-else-if="playerStore.errorMessage" class="text-rose-400 text-sm px-6 text-center">
