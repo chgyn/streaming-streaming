@@ -1,0 +1,12 @@
+.git
+.gitignore
+.agents
+.agentes
+server
+*.log
+.env
+.env.local
+node_modules
+frontend/node_modules
+.vscode
+.idea

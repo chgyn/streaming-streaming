@@ -1,0 +1,34 @@
+# Agents & Local configurations
+.agents/
+.agentes
+
+# Binaries & Builds
+/server
+backend/bin/
+backend/api
+backend/worker
+backend/cmd/api/api
+backend/cmd/worker/worker
+frontend/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env.local
+
+# IDEs & System
+.DS_Store
+.idea/
+.vscode/
+*.log
