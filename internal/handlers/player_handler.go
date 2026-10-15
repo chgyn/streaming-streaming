@@ -22,8 +22,8 @@ func NewPlayerHandler(superflixBaseURL string) *PlayerHandler {
 	}
 }
 
-// Resolve gera a URL segura de incorporação para filmes ou episódios de séries.
-// GET /api/player/resolve?type={movie|tv}&tmdb_id={id}&season={s}&episode={e}
+// Resolve gera a URL segura de incorporação para filmes, episódios de séries ou canais ao vivo.
+// GET /api/player/resolve?type={movie|tv|channel}&tmdb_id={id}&channel_id={id}&season={s}&episode={e}
 func (h *PlayerHandler) Resolve(c *gin.Context) {
 	var req models.PlayerResolveRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -34,21 +34,36 @@ func (h *PlayerHandler) Resolve(c *gin.Context) {
 	var embedURL string
 	switch req.Type {
 	case "movie":
+		if req.TMDBID <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "para filmes ('movie'), 'tmdb_id' deve ser maior que zero"})
+			return
+		}
 		embedURL = fmt.Sprintf("%s/filme/%d", h.superflixBaseURL, req.TMDBID)
 	case "tv":
+		if req.TMDBID <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "para séries ('tv'), 'tmdb_id' deve ser maior que zero"})
+			return
+		}
 		if req.Season <= 0 || req.Episode <= 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "para séries ('tv'), 'season' e 'episode' devem ser inteiros maiores que zero"})
 			return
 		}
 		embedURL = fmt.Sprintf("%s/serie/%d/%d/%d", h.superflixBaseURL, req.TMDBID, req.Season, req.Episode)
+	case "channel":
+		if strings.TrimSpace(req.ChannelID) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "para canais ('channel'), 'channel_id' é obrigatório"})
+			return
+		}
+		embedURL = fmt.Sprintf("%s/canal/%s", h.superflixBaseURL, strings.TrimSpace(req.ChannelID))
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo inválido, utilize 'movie' ou 'tv'"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo inválido, utilize 'movie', 'tv' ou 'channel'"})
 		return
 	}
 
 	c.JSON(http.StatusOK, models.PlayerResolveResponse{
-		TMDBID:   req.TMDBID,
-		Type:     req.Type,
-		EmbedURL: embedURL,
+		TMDBID:    req.TMDBID,
+		ChannelID: req.ChannelID,
+		Type:      req.Type,
+		EmbedURL:  embedURL,
 	})
 }

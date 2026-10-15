@@ -35,10 +35,12 @@ func main() {
 	cacheTTL := time.Duration(cfg.CacheTTLMinutes) * time.Minute
 	cacheCleanup := time.Duration(cfg.CacheCleanupMinutes) * time.Minute
 	tmdbService := services.NewTMDBService(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cacheTTL, cacheCleanup)
+	channelService := services.NewChannelService(cfg.SuperflixBaseURL, 60*time.Minute)
 
 	// Inicialização dos handlers
 	tmdbHandler := handlers.NewTMDBHandler(tmdbService)
 	playerHandler := handlers.NewPlayerHandler(cfg.SuperflixBaseURL)
+	channelHandler := handlers.NewChannelHandler(channelService)
 	healthHandler := handlers.NewHealthHandler(tmdbService)
 
 	// Rotas da API REST
@@ -48,6 +50,8 @@ func main() {
 		api.GET("/search", tmdbHandler.Search)
 		api.GET("/details/:media_type/:id", tmdbHandler.GetDetails)
 		api.GET("/player/resolve", playerHandler.Resolve)
+		api.GET("/channels", channelHandler.GetChannels)
+		api.GET("/channels/categories", channelHandler.GetCategories)
 		api.GET("/health", healthHandler.HealthCheck)
 	}
 

@@ -26,11 +26,15 @@ func setupTestRouter() (*gin.Engine, *handlers.PlayerHandler) {
 	playerHandler := handlers.NewPlayerHandler("https://superflixapi.quest")
 	tmdbService := services.NewTMDBService("https://api.themoviedb.org/3", "dummy", 10*time.Minute, 1*time.Minute)
 	tmdbHandler := handlers.NewTMDBHandler(tmdbService)
+	channelService := services.NewChannelService("https://superflixapi.quest", 10*time.Minute)
+	channelHandler := handlers.NewChannelHandler(channelService)
 	healthHandler := handlers.NewHealthHandler(tmdbService)
 
 	api := router.Group("/api")
 	{
 		api.GET("/player/resolve", playerHandler.Resolve)
+		api.GET("/channels", channelHandler.GetChannels)
+		api.GET("/channels/categories", channelHandler.GetCategories)
 		api.GET("/trending", tmdbHandler.GetTrending)
 		api.GET("/health", healthHandler.HealthCheck)
 	}
@@ -103,6 +107,40 @@ func TestPlayerResolve_TV(t *testing.T) {
 
 	if wFail.Code != http.StatusBadRequest {
 		t.Fatalf("esperava status 400 para série sem temporada/episódio, obteve %d", wFail.Code)
+	}
+}
+
+func TestPlayerResolve_Channel(t *testing.T) {
+	router, _ := setupTestRouter()
+
+	req, _ := http.NewRequest(http.MethodGet, "/api/player/resolve?type=channel&channel_id=sportv", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("esperava status 200, obteve %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	var resp models.PlayerResolveResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("erro ao deserializar resposta: %v", err)
+	}
+
+	expectedURL := "https://superflixapi.quest/canal/sportv"
+	if resp.EmbedURL != expectedURL {
+		t.Fatalf("embed_url esperada: %s, obtida: %s", expectedURL, resp.EmbedURL)
+	}
+	if resp.Type != "channel" || resp.ChannelID != "sportv" {
+		t.Fatalf("dados divergentes na resposta: %+v", resp)
+	}
+
+	// Caso de erro: canal sem channel_id
+	reqFail, _ := http.NewRequest(http.MethodGet, "/api/player/resolve?type=channel", nil)
+	wFail := httptest.NewRecorder()
+	router.ServeHTTP(wFail, reqFail)
+
+	if wFail.Code != http.StatusBadRequest {
+		t.Fatalf("esperava status 400 para canal sem channel_id, obteve %d", wFail.Code)
 	}
 }
 

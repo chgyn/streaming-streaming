@@ -33,14 +33,32 @@ export const tmdbService = {
 }
 
 export const playerService = {
-  resolve: (type, tmdbId, season = null, episode = null) => {
-    const params = { type, tmdb_id: tmdbId }
-    if (type === 'tv') {
-      if (season != null) params.season = season
-      if (episode != null) params.episode = episode
+  resolve: (type, tmdbId, season = null, episode = null, channelId = null) => {
+    const params = { type }
+    if (type === 'channel') {
+      params.channel_id = channelId
+    } else {
+      params.tmdb_id = tmdbId
+      if (type === 'tv') {
+        if (season != null) params.season = season
+        if (episode != null) params.episode = episode
+      }
     }
     return api.get('/player/resolve', { params })
   }
 }
 
+export const channelService = {
+  getChannels: (category = '', q = '') => {
+    const params = {}
+    if (category && category !== 'Todos') params.category = category
+    if (q) params.q = q
+    return api.get('/channels', { params })
+  },
+
+  getCategories: () =>
+    api.get('/channels/categories')
+}
+
 export default api
+

@@ -21,6 +21,15 @@ export const usePlayerStore = defineStore('player', () => {
     await updateEmbedUrl()
   }
 
+  async function openChannel(channel) {
+    currentMedia.value = { ...channel, media_type: 'channel' }
+    currentTitle.value = channel.name || 'Canal Ao Vivo'
+    season.value = 1
+    episode.value = 1
+    isOpen.value = true
+    await updateEmbedUrl()
+  }
+
   async function updateEmbedUrl() {
     if (!currentMedia.value) return
     isLoading.value = true
@@ -30,9 +39,10 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const data = await playerService.resolve(
         type,
-        currentMedia.value.id,
+        type === 'channel' ? null : currentMedia.value.id,
         type === 'tv' ? season.value : null,
-        type === 'tv' ? episode.value : null
+        type === 'tv' ? episode.value : null,
+        type === 'channel' ? currentMedia.value.id : null
       )
       embedUrl.value = data.embed_url
     } catch (err) {
@@ -59,6 +69,7 @@ export const usePlayerStore = defineStore('player', () => {
     isLoading,
     errorMessage,
     openPlayer,
+    openChannel,
     updateEmbedUrl,
     closePlayer
   }

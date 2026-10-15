@@ -1,15 +1,20 @@
 <script setup>
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
-import { X, Tv, Film, Loader2, AlertTriangle, ExternalLink, Cast } from 'lucide-vue-next'
+import { X, Tv, Film, Radio, Loader2, AlertTriangle, ExternalLink, Cast, Info } from 'lucide-vue-next'
 
 const playerStore = usePlayerStore()
+
+const isChannel = computed(() => {
+  return playerStore.currentMedia?.media_type === 'channel'
+})
 
 const isTv = computed(() => {
   return playerStore.currentMedia?.media_type === 'tv'
 })
 
 const unreleasedInfo = computed(() => {
+  if (isChannel.value) return null
   const dateStr = playerStore.currentMedia?.release_date || playerStore.currentMedia?.first_air_date
   if (!dateStr) return null
   const releaseDate = new Date(dateStr)
@@ -30,10 +35,15 @@ const unreleasedInfo = computed(() => {
       <!-- Modal Header -->
       <div class="px-5 py-4 flex items-center justify-between border-b border-slate-800">
         <div class="flex items-center gap-2.5">
-          <component :is="isTv ? Tv : Film" class="w-5 h-5 text-sky-400" />
+          <Radio v-if="isChannel" class="w-5 h-5 text-rose-500 animate-pulse" />
+          <component :is="isTv ? Tv : Film" v-else class="w-5 h-5 text-sky-400" />
           <h2 class="font-heading font-bold text-lg text-slate-100 truncate max-w-lg">
             {{ playerStore.currentTitle }}
           </h2>
+          <div v-if="isChannel" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-[10px] font-bold text-rose-400 uppercase tracking-wider ml-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+            <span>Ao Vivo</span>
+          </div>
         </div>
         <div class="flex items-center gap-2">
           <a
@@ -74,12 +84,20 @@ const unreleasedInfo = computed(() => {
           :src="playerStore.embedUrl"
           class="w-full h-full border-0"
           allowfullscreen
+          referrerpolicy="no-referrer"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; presentation; remote-playback"
         ></iframe>
 
         <div v-else-if="playerStore.errorMessage" class="text-rose-400 text-sm px-6 text-center">
           {{ playerStore.errorMessage }}
         </div>
+      </div>
+
+      <!-- Nota explicativa sobre títulos não disponibilizados pelo provedor ou sinal de canais -->
+      <div class="px-5 py-2.5 bg-slate-950/80 border-t border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+        <Info class="w-4 h-4 text-sky-400 flex-shrink-0" />
+        <span v-if="isChannel">Sinal de transmissão ao vivo sincronizado. Se o reprodutor nativo apresentar oscilação, utilize o botão <strong>"Abrir Player Direto (HTTPS)"</strong> para assistir externamente ou na Smart TV.</span>
+        <span v-else>Se aparecer <strong>"404 | Not Found"</strong> na tela do vídeo, significa que o provedor externo ainda não possui o arquivo deste título (comum em filmes inéditos ou que ainda estão nos cinemas).</span>
       </div>
 
       <!-- Barra Utilitária de Transmissão e Smart TV -->
@@ -103,7 +121,7 @@ const unreleasedInfo = computed(() => {
       </div>
 
       <!-- Episode & Season Selector for TV series -->
-      <div v-if="isTv" class="px-5 py-3.5 bg-slate-950/60 border-t border-slate-800 flex flex-wrap items-center gap-4 text-sm">
+      <div v-if="isTv && !isChannel" class="px-5 py-3.5 bg-slate-950/60 border-t border-slate-800 flex flex-wrap items-center gap-4 text-sm">
         <div class="flex items-center gap-2">
           <label class="text-slate-400 font-medium">Temporada:</label>
           <input
