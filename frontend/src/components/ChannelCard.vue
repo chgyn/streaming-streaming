@@ -38,6 +38,7 @@ function handleImgError() {
         :src="channel.logo_url"
         :alt="channel.name"
         loading="lazy"
+        referrerpolicy="no-referrer"
         class="max-h-16 max-w-[80%] object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-110"
         @error="handleImgError"
       />

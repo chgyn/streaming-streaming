@@ -11,6 +11,17 @@ const channelStore = useChannelStore()
 
 // Aba ativa: 'movie', 'tv', 'channel'
 const activeTab = ref('movie')
+const channelSearchInput = ref(channelStore.searchQuery)
+let searchDebounceTimer = null
+
+function handleChannelSearch(e) {
+  const val = e.target.value
+  channelSearchInput.value = val
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    channelStore.setSearchQuery(val)
+  }, 120)
+}
 
 onMounted(() => {
   mediaStore.fetchTrending('movie')
@@ -119,10 +130,11 @@ const listTitle = computed(() => {
         <div class="relative flex-1 max-w-md">
           <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
-            v-model="channelStore.searchQuery"
+            :value="channelSearchInput"
             type="text"
             placeholder="Filtrar canal (ex: Globo, SporTV, ESPN, HBO)..."
             class="w-full bg-slate-950/80 text-xs sm:text-sm border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 transition-all"
+            @input="handleChannelSearch"
           />
         </div>
 
